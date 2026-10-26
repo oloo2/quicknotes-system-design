@@ -21,7 +21,10 @@ async function request(url, options = {}) {
     throw new Error(`Request failed with status ${response.status}`);
   }
 
-  return response.json();
+  return {
+    data: await response.json(),
+    status: response.status,
+  };
 }
 
 function setButtonsDisabled(disabled) {
@@ -67,7 +70,7 @@ async function loadNotes() {
   setStatus("Loading notes...", "loading");
 
   try {
-    const loadedNotes = await request(`${API_URL}?_limit=10`);
+    const { data: loadedNotes } = await request(`${API_URL}?_limit=10`);
 
     if (!Array.isArray(loadedNotes)) {
       throw new Error("The server returned an invalid notes list.");
@@ -108,7 +111,7 @@ async function createNote(event) {
   setStatus("Creating note...", "loading");
 
   try {
-    const createdNote = await request(API_URL, {
+    const { data: createdNote, status } = await request(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=UTF-8" },
       body: JSON.stringify({ title, body, userId: 1 }),
@@ -121,7 +124,10 @@ async function createNote(event) {
     notes.unshift(createdNote);
     renderNotes();
     noteForm.reset();
-    setStatus("Note created successfully.", "success");
+    setStatus(
+      `Note created (status ${status}, id ${createdNote.id}).`,
+      "success"
+    );
   } catch {
     setStatus(
       "Sorry, we couldn't create your note. Please try again.",
