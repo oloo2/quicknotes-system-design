@@ -1,8 +1,13 @@
 # QuickNotes REST API
 
+This document defines the production QuickNotes API for the backend team to
+build. The browser prototype currently uses JSONPlaceholder as a practice
+service; JSONPlaceholder is not this API and does not persist note changes.
+
 ## Conventions
 
-- Base URL: `https://api.quicknotes.example/v1`
+- Production base URL: `https://api.quicknotes.example/v1` (placeholder domain
+  to replace with the deployed service hostname).
 - Requests and responses use JSON (`Content-Type: application/json`).
 - All endpoints require a valid bearer access token, except `POST /auth/token`.
 - Notes belong to the authenticated user. The server derives the owner from
@@ -19,6 +24,33 @@
 | `GET`    | `/notes/{noteId}` | Retrieve one note belonging to the authenticated user.                               | `200 OK`         |
 | `PATCH`  | `/notes/{noteId}` | Update a note's title or body.                                                       | `200 OK`         |
 | `DELETE` | `/notes/{noteId}` | Delete a note belonging to the authenticated user.                                   | `204 No Content` |
+
+## Authenticate
+
+`POST /v1/auth/token`
+
+Request:
+
+```json
+{
+  "email": "alex@example.com",
+  "password": "example-password-value"
+}
+```
+
+Success response (`200 OK`):
+
+```json
+{
+  "accessToken": "example-token-value",
+  "tokenType": "Bearer",
+  "expiresIn": 3600
+}
+```
+
+Include the access token as a bearer credential in the `Authorization` header
+on protected requests. Passwords are sent only over HTTPS and are never
+returned by the API.
 
 ## Create a note
 
@@ -79,6 +111,37 @@ Success response (`200 OK`):
 `limit` is optional (default `20`, maximum `100`). When another page is
 available, `nextCursor` contains an opaque cursor for the next request;
 otherwise it is `null`.
+
+## Update a note
+
+`PATCH /v1/notes/note_01J9Q2M8Y4`
+
+Only the supplied fields are changed. The authenticated user must own the
+note.
+
+Request:
+
+```json
+{
+  "title": "Release checklist - final",
+  "body": "Confirm deployment, smoke tests, and monitoring."
+}
+```
+
+Success response (`200 OK`):
+
+```json
+{
+  "id": "note_01J9Q2M8Y4",
+  "title": "Release checklist - final",
+  "body": "Confirm deployment, smoke tests, and monitoring.",
+  "createdAt": "2026-10-26T20:28:34Z",
+  "updatedAt": "2026-10-26T21:05:00Z"
+}
+```
+
+On successful deletion, `DELETE /v1/notes/{noteId}` returns `204 No Content`
+with an empty response body.
 
 ## Error responses
 
