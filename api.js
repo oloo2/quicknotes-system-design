@@ -147,6 +147,7 @@ async function deleteNote(id) {
       method: "DELETE",
     });
 
+    // JSONPlaceholder only simulates DELETE; remove it from this session's list after success.
     notes = notes.filter((note) => note.id !== id);
     renderNotes();
     setStatus("Note deleted successfully.", "success");
